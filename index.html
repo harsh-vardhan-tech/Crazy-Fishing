@@ -1,49 +1,711 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-	<title>crazy_fishing</title>
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
-	
-	<!-- Made with Construct, the game and app creator :: https://www.construct.net -->
-	<meta name="generator" content="Scirra Construct">
-
-	<meta name="author" content="InfinitGames">
-	<meta name="description" content="10001 - Add JS events
-10002 - Fis event is on IOS
-10003 - Update Icon">
-
-	<link rel="manifest" href="appmanifest.json">
-
-
-	<link rel="stylesheet" href="style.css">
-
-
-
-</head> 
- 
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crazy Fishing - Addictive Fish Catching Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(180deg, #1e3c72 0%, #2a5298 50%, #7db9e8 100%);
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Water Animation */
+        .water {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 60%;
+            background: linear-gradient(180deg, rgba(0,100,200,0.3) 0%, rgba(0,50,150,0.6) 100%);
+            z-index: 1;
+        }
+        
+        .wave {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 200%;
+            height: 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            animation: wave 3s infinite linear;
+        }
+        
+        @keyframes wave {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(50%); }
+        }
+        
+        /* Top HUD */
+        #hud {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            padding: 15px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        #coinDisplay {
+            font-size: 24px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .coinIcon {
+            width: 30px;
+            height: 30px;
+            background: gold;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 0 10px rgba(255,215,0,0.5);
+        }
+        
+        #scoreDisplay {
+            font-size: 20px;
+        }
+        
+        /* Fishing Rod */
+        #fishingRod {
+            position: absolute;
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 200px;
+            background: linear-gradient(to bottom, #8B4513, #654321);
+            border-radius: 10px;
+            z-index: 50;
+            transform-origin: top center;
+            transition: transform 0.3s;
+        }
+        
+        #fishingLine {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 0;
+            background: rgba(255,255,255,0.6);
+            transition: height 0.5s;
+            z-index: 40;
+        }
+        
+        #hook {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 15px;
+            height: 20px;
+            background: silver;
+            border-radius: 50% 50% 50% 0;
+            z-index: 45;
+            transition: all 0.3s;
+        }
+        
+        /* Fish */
+        .fish {
+            position: absolute;
+            width: 50px;
+            height: 30px;
+            background: linear-gradient(45deg, #FF6B35, #F7931E);
+            border-radius: 50% 50% 50% 0;
+            z-index: 30;
+            cursor: pointer;
+            transition: all 0.2s;
+            animation: swim 4s infinite;
+        }
+        
+        .fish:hover {
+            transform: scale(1.1);
+        }
+        
+        .fish.rare {
+            background: linear-gradient(45deg, #FFD700, #FFA500);
+            animation: swim 3s infinite, glow 1s infinite;
+        }
+        
+        .fish.legendary {
+            background: linear-gradient(45deg, #9B59B6, #E74C3C);
+            animation: swim 2.5s infinite, glow 0.5s infinite;
+            box-shadow: 0 0 20px rgba(155,89,182,0.8);
+        }
+        
+        @keyframes swim {
+            0%, 100% { transform: translateY(0) rotateY(0deg); }
+            50% { transform: translateY(-20px) rotateY(180deg); }
+        }
+        
+        @keyframes glow {
+            0%, 100% { filter: brightness(1); }
+            50% { filter: brightness(1.5); }
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+        
+        .btn-gold {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #333;
+        }
+        
+        /* Shop Panel */
+        #shopPanel {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            z-index: 200;
+            transition: transform 0.3s;
+            overflow-y: auto;
+        }
+        
+        #shopPanel.active {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .shop-header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            font-size: 28px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .shop-item {
+            background: rgba(255,255,255,0.9);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .shop-item.best-value {
+            border: 3px solid gold;
+            position: relative;
+            animation: pulse 2s infinite;
+        }
+        
+        .shop-item.best-value::before {
+            content: 'BEST VALUE';
+            position: absolute;
+            top: -12px;
+            right: 10px;
+            background: gold;
+            color: #333;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255,215,0,0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(255,215,0,0); }
+        }
+        
+        .shop-info {
+            flex: 1;
+        }
+        
+        .shop-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .shop-coins {
+            font-size: 16px;
+            color: #666;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            background: rgba(0,0,0,0.3);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        /* Bottom Action Bar */
+        #actionBar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+        
+        /* Coin Animation */
+        @keyframes coinFloat {
+            0% { transform: translateY(0) scale(1); opacity: 1; }
+            100% { transform: translateY(-100px) scale(0.5); opacity: 0; }
+        }
+        
+        .floating-coin {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: gold;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: coinFloat 1s ease-out forwards;
+            z-index: 999;
+        }
+        
+        /* Loading Screen */
+        #loadingScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s;
+        }
+        
+        #loadingScreen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .loading-title {
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+        }
+        
+        .start-btn {
+            padding: 20px 40px;
+            font-size: 24px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #333;
+            font-weight: bold;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+        
+        .start-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.4);
+        }
+    </style>
+</head>
 <body>
-
-	
-
-<script>
-if (location.protocol.substr(0, 4) === "file")
-{
-	alert("Web exports won't work until you upload them. (When running on the file: protocol, browsers block many features from working for security reasons.)");
-}
-</script>
-	
-	<noscript>
-		<div id="notSupportedWrap">
-			<h2 id="notSupportedTitle">This content requires JavaScript</h2>
-			<p class="notSupportedMessage">JavaScript appears to be disabled. Please enable it to view this content.</p>
-		</div>
-	</noscript>
-	<script src="scripts/modernjscheck.js"></script>
-	<script src="scripts/supportcheck.js"></script>
-	<script src="scripts/offlineclient.js" type="module"></script>
-	<script src="scripts/main.js" type="module"></script>
-	<script src="scripts/register-sw.js" type="module"></script>
-
-</body> 
+    <!-- Loading Screen -->
+    <div id="loadingScreen">
+        <div class="loading-title">🎣 CRAZY FISHING 🎣</div>
+        <button class="start-btn" onclick="startGame()">START FISHING</button>
+    </div>
+    
+    <!-- Game Container -->
+    <div id="gameContainer">
+        <!-- HUD -->
+        <div id="hud">
+            <div id="coinDisplay">
+                <div class="coinIcon">💰</div>
+                <span id="coinAmount">0</span>
+            </div>
+            <div id="scoreDisplay">Score: <span id="score">0</span></div>
+        </div>
+        
+        <!-- Water -->
+        <div class="water">
+            <div class="wave"></div>
+        </div>
+        
+        <!-- Fishing Rod -->
+        <div id="fishingRod">
+            <div id="hook"></div>
+        </div>
+        <div id="fishingLine"></div>
+        
+        <!-- Shop Panel -->
+        <div id="shopPanel">
+            <button class="close-btn" onclick="closeShop()">×</button>
+            <h2 class="shop-header">💎 COIN SHOP 💎</h2>
+            
+            <div class="shop-item">
+                <div class="shop-info">
+                    <div class="shop-title">Starter Pack</div>
+                    <div class="shop-coins">💰 2,500 Coins</div>
+                </div>
+                <button class="btn btn-primary" onclick="purchase(2500, 25)">₹25</button>
+            </div>
+            
+            <div class="shop-item best-value">
+                <div class="shop-info">
+                    <div class="shop-title">Popular Pack</div>
+                    <div class="shop-coins">💰 6,000 Coins</div>
+                </div>
+                <button class="btn btn-success" onclick="purchase(6000, 50)">₹50</button>
+            </div>
+            
+            <div class="shop-item">
+                <div class="shop-info">
+                    <div class="shop-title">Pro Pack</div>
+                    <div class="shop-coins">💰 12,000 Coins</div>
+                </div>
+                <button class="btn btn-primary" onclick="purchase(12000, 100)">₹100</button>
+            </div>
+            
+            <div class="shop-item best-value">
+                <div class="shop-info">
+                    <div class="shop-title">Ultimate Pack</div>
+                    <div class="shop-coins">💰 30,000 Coins</div>
+                </div>
+                <button class="btn btn-gold" onclick="purchase(30000, 200)">₹200</button>
+            </div>
+            
+            <div class="shop-item">
+                <div class="shop-info">
+                    <div class="shop-title">Mega Pack</div>
+                    <div class="shop-coins">💰 80,000 Coins</div>
+                </div>
+                <button class="btn btn-gold" onclick="purchase(80000, 500)">₹500</button>
+            </div>
+            
+            <h2 class="shop-header" style="margin-top: 30px;">⚡ UPGRADES ⚡</h2>
+            
+            <div class="shop-item">
+                <div class="shop-info">
+                    <div class="shop-title">Better Rod</div>
+                    <div class="shop-coins">💰 5,000 Coins</div>
+                </div>
+                <button class="btn btn-primary" onclick="buyUpgrade('rod', 5000)">BUY</button>
+            </div>
+            
+            <div class="shop-item">
+                <div class="shop-info">
+                    <div class="shop-title">Lucky Hook</div>
+                    <div class="shop-coins">💰 8,000 Coins</div>
+                </div>
+                <button class="btn btn-primary" onclick="buyUpgrade('hook', 8000)">BUY</button>
+            </div>
+            
+            <div class="shop-item">
+                <div class="shop-info">
+                    <div class="shop-title">Rare Fish Finder</div>
+                    <div class="shop-coins">💰 15,000 Coins</div>
+                </div>
+                <button class="btn btn-success" onclick="buyUpgrade('finder', 15000)">BUY</button>
+            </div>
+            
+            <div class="shop-item best-value">
+                <div class="shop-info">
+                    <div class="shop-title">VIP Fishing License</div>
+                    <div class="shop-coins">💰 25,000 Coins</div>
+                </div>
+                <button class="btn btn-gold" onclick="buyUpgrade('vip', 25000)">BUY</button>
+            </div>
+            
+            <div class="shop-item">
+                <div class="shop-info">
+                    <div class="shop-title">Master Fisher</div>
+                    <div class="shop-coins">💰 50,000 Coins</div>
+                </div>
+                <button class="btn btn-gold" onclick="buyUpgrade('master', 50000)">BUY</button>
+            </div>
+        </div>
+        
+        <!-- Action Bar -->
+        <div id="actionBar">
+            <button class="btn btn-primary" onclick="watchAd()">📺 Watch Ad</button>
+            <button class="btn btn-gold" onclick="openShop()">💎 Shop</button>
+        </div>
+    </div>
+    
+    <script>
+        // Game State
+        let gameState = {
+            coins: 0,
+            score: 0,
+            adCount: 0,
+            upgrades: {
+                rod: false,
+                hook: false,
+                finder: false,
+                vip: false,
+                master: false
+            },
+            fishSpawnRate: 2000,
+            catchMultiplier: 1
+        };
+        
+        // Load saved data
+        function loadGame() {
+            const saved = localStorage.getItem('crazyFishingData');
+            if (saved) {
+                gameState = JSON.parse(saved);
+                updateUI();
+            }
+        }
+        
+        // Save game
+        function saveGame() {
+            localStorage.setItem('crazyFishingData', JSON.stringify(gameState));
+        }
+        
+        // Update UI
+        function updateUI() {
+            document.getElementById('coinAmount').textContent = gameState.coins.toLocaleString();
+            document.getElementById('score').textContent = gameState.score.toLocaleString();
+        }
+        
+        // Start Game
+        function startGame() {
+            document.getElementById('loadingScreen').classList.add('hidden');
+            loadGame();
+            spawnFish();
+            setInterval(spawnFish, gameState.fishSpawnRate);
+        }
+        
+        // Spawn Fish
+        function spawnFish() {
+            const container = document.getElementById('gameContainer');
+            const fish = document.createElement('div');
+            fish.className = 'fish';
+            
+            // Random fish type
+            const rand = Math.random();
+            let fishValue = 50;
+            let fishType = 'common';
+            
+            if (gameState.upgrades.finder) {
+                if (rand > 0.95) {
+                    fish.classList.add('legendary');
+                    fishValue = 500;
+                    fishType = 'legendary';
+                } else if (rand > 0.80) {
+                    fish.classList.add('rare');
+                    fishValue = 200;
+                    fishType = 'rare';
+                }
+            } else {
+                if (rand > 0.98) {
+                    fish.classList.add('legendary');
+                    fishValue = 500;
+                    fishType = 'legendary';
+                } else if (rand > 0.90) {
+                    fish.classList.add('rare');
+                    fishValue = 200;
+                    fishType = 'rare';
+                }
+            }
+            
+            // Position
+            fish.style.left = Math.random() * (window.innerWidth - 100) + 'px';
+            fish.style.top = (window.innerHeight * 0.5) + Math.random() * (window.innerHeight * 0.3) + 'px';
+            
+            // Click to catch
+            fish.onclick = () => catchFish(fish, fishValue, fishType);
+            
+            container.appendChild(fish);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                if (fish.parentNode) {
+                    fish.remove();
+                }
+            }, 5000);
+        }
+        
+        // Catch Fish
+        function catchFish(fishElement, value, type) {
+            const multipliedValue = Math.floor(value * gameState.catchMultiplier);
+            gameState.coins += multipliedValue;
+            gameState.score += multipliedValue;
+            
+            // Show coin animation
+            showCoinAnimation(fishElement, multipliedValue);
+            
+            // Remove fish
+            fishElement.remove();
+            
+            // Update UI and save
+            updateUI();
+            saveGame();
+        }
+        
+        // Show Coin Animation
+        function showCoinAnimation(element, amount) {
+            const rect = element.getBoundingClientRect();
+            const coin = document.createElement('div');
+            coin.className = 'floating-coin';
+            coin.textContent = '+' + amount;
+            coin.style.left = rect.left + 'px';
+            coin.style.top = rect.top + 'px';
+            coin.style.color = 'white';
+            coin.style.fontWeight = 'bold';
+            coin.style.fontSize = '20px';
+            
+            document.body.appendChild(coin);
+            
+            setTimeout(() => coin.remove(), 1000);
+        }
+        
+        // Watch Ad
+        function watchAd() {
+            // Progressive ad rewards
+            const rewards = [200, 350, 450, 550, 650, 750, 850, 950, 1000];
+            const reward = rewards[Math.min(gameState.adCount, rewards.length - 1)];
+            
+            gameState.adCount++;
+            gameState.coins += reward;
+            
+            alert(`🎉 Ad Complete! You earned ${reward} coins!\n\nAd Count: ${gameState.adCount}\nNext Ad Reward: ${rewards[Math.min(gameState.adCount, rewards.length - 1)]} coins`);
+            
+            updateUI();
+            saveGame();
+        }
+        
+        // Purchase Coins
+        function purchase(coins, rupees) {
+            if (confirm(`Purchase ${coins.toLocaleString()} coins for ₹${rupees}?`)) {
+                gameState.coins += coins;
+                alert(`✅ Purchase Successful!\n\nYou received ${coins.toLocaleString()} coins!`);
+                updateUI();
+                saveGame();
+                closeShop();
+            }
+        }
+        
+        // Buy Upgrade
+        function buyUpgrade(type, cost) {
+            if (gameState.upgrades[type]) {
+                alert('❌ You already own this upgrade!');
+                return;
+            }
+            
+            if (gameState.coins < cost) {
+                alert(`❌ Not enough coins!\n\nYou need ${cost.toLocaleString()} coins.\nYou have ${gameState.coins.toLocaleString()} coins.`);
+                return;
+            }
+            
+            gameState.coins -= cost;
+            gameState.upgrades[type] = true;
+            
+            // Apply upgrade effects
+            if (type === 'rod') {
+                gameState.fishSpawnRate = 1500;
+            } else if (type === 'hook') {
+                gameState.catchMultiplier = 1.5;
+            } else if (type === 'master') {
+                gameState.catchMultiplier = 2;
+            }
+            
+            alert(`✅ Upgrade Purchased!\n\n${getUpgradeName(type)} is now active!`);
+            updateUI();
+            saveGame();
+        }
+        
+        function getUpgradeName(type) {
+            const names = {
+                rod: 'Better Rod',
+                hook: 'Lucky Hook',
+                finder: 'Rare Fish Finder',
+                vip: 'VIP Fishing License',
+                master: 'Master Fisher'
+            };
+            return names[type] || type;
+        }
+        
+        // Shop Functions
+        function openShop() {
+            document.getElementById('shopPanel').classList.add('active');
+        }
+        
+        function closeShop() {
+            document.getElementById('shopPanel').classList.remove('active');
+        }
+        
+        // Load game on page load
+        loadGame();
+    </script>
+</body>
 </html>
